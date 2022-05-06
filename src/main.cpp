@@ -51,6 +51,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(MATRIX_WIDTH, MATRIX_HEIGHT, PIN,
 
 // General Variables
 int brightness = 255;
+int staticTime = 30;
 int sequenceSelection = 0; // 0 = custom (randomized), 1 = save 1, etc.
 uint16_t customSequenceBitVector = 0xFFFF;
 uint16_t sequence1BitVector = 0xFFFF;
@@ -62,7 +63,11 @@ uint16_t sequence3BitVector = 0xFFFF;
 void printWiFiStatus();
 void SendWebsite();
 void SendXML();
-void UpdateSlider();
+
+void UpdateSliderBrightness();
+void UpdateSliderTime();
+void ProcessSeqSel0();
+void ProcessSeqSel1();
 
 
 void setup()
@@ -103,7 +108,10 @@ void setup()
   // add as many as you need to process incoming strings from your web page
   // as you can imagine you will need to code some javascript in your web page to send such strings
   // this process will be documented in the SuperMon.h web page code
-  server.on("/UPDATE_SLIDER", UpdateSlider);
+  server.on("/UPDATE_SLIDER_BRIGHTNESS", UpdateSliderBrightness);
+  server.on("/UPDATE_SLIDER_TIME", UpdateSliderTime);
+  server.on("/SEQ_SEL_0", ProcessSeqSel0);
+  server.on("/SEQ_SEL_1", ProcessSeqSel1);
   // server.on("/BUTTON_0", ProcessButton_0);
   // server.on("/BUTTON_1", ProcessButton_1);
 
@@ -114,6 +122,7 @@ void setup()
   matrix.begin();
   matrix.clear();
   matrix.setTextWrap(false);
+  matrix.show();
 }
 
 void loop()
@@ -140,6 +149,7 @@ void loop()
   // no matter what you must call this handleClient repeatidly--otherwise the web page
   // will not get instructions to do something
   server.handleClient();
+  Serial.print("Sequence selection: "); Serial.println(sequenceSelection);
 }
 
 
@@ -168,97 +178,10 @@ void printWiFiStatus()
   Serial.println(ip);
 }
 
-// code to send the main web page
-// PAGE_MAIN is a large char defined in MyWebpage.h
-void SendWebsite()
-{
-  Serial.println("sending web page");
-  // you may have to play with this value, big pages need more porcessing time, and hence
-  // a longer timeout that 200 ms
-  server.send(200, "text/html", PAGE_MAIN);
-}
-
-// code to send the main web page
-// I avoid string data types at all cost hence all the char mainipulation code
-void SendXML()
-{
-  // Serial.println("sending xml");
-
-  strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
-
-  // // send bitsA0
-  // sprintf(buf, "<B0>%d</B0>\n", BitsA0);
-  // strcat(XML, buf);
-  // // send Volts0
-  // sprintf(buf, "<V0>%d.%d</V0>\n", (int) (VoltsA0), abs((int) (VoltsA0 * 10)  - ((int) (VoltsA0) * 10)));
-  // strcat(XML, buf);
-
-  // // send bits1
-  // sprintf(buf, "<B1>%d</B1>\n", BitsA1);
-  // strcat(XML, buf);
-  // // send Volts1
-  // sprintf(buf, "<V1>%d.%d</V1>\n", (int) (VoltsA1), abs((int) (VoltsA1 * 10)  - ((int) (VoltsA1) * 10)));
-  // strcat(XML, buf);
-
-  // // show led0 status
-  // if (LED0) {
-  //   strcat(XML, "<LED>1</LED>\n");
-  // }
-  // else {
-  //   strcat(XML, "<LED>0</LED>\n");
-  // }
-
-  // if (SomeOutput) {
-  //   strcat(XML, "<SWITCH>1</SWITCH>\n");
-  // }
-  // else {
-  //   strcat(XML, "<SWITCH>0</SWITCH>\n");
-  // }
-
-  strcat(XML, "</Data>\n");
-  // wanna see what the XML code looks like?
-  // actually print it to the serial monitor and use some text editor to get the size
-  // then pad and adjust char XML[2048]; above
-  Serial.println(XML);
-
-  // you may have to play with this value, big pages need more porcessing time, and hence
-  // a longer timeout that 200 ms
-  server.send(200, "text/xml", XML);
-}
-
-void UpdateSlider() {
-
-  // many I hate strings, but wifi lib uses them...
-  String t_state = server.arg("VALUE");
-
-  // conver the string sent from the web page to an int
-  ////FanSpeed = t_state.toInt();
-  brightness = t_state.toInt();
-  ////Serial.print("UpdateSlider"); Serial.println(FanSpeed);
-  Serial.print("UpdateSlider"); Serial.println(brightness);
-  // now set the PWM duty cycle
-  ////ledcWrite(0, FanSpeed);
-  matrix.setBrightness(brightness);
 
 
-  // YOU MUST SEND SOMETHING BACK TO THE WEB PAGE--BASICALLY TO KEEP IT LIVE
 
-  // option 1: send no information back, but at least keep the page live
-  // just send nothing back
-  // server.send(200, "text/plain", ""); //Send web page
 
-  // option 2: send something back immediately, maybe a pass/fail indication, maybe a measured value
-  // here is how you send data back immediately and NOT through the general XML page update code
-  // my simple example guesses at fan speed--ideally measure it and send back real data
-  // i avoid strings at all caost, hence all the code to start with "" in the buffer and build a
-  // simple piece of data
-  ////FanRPM = map(FanSpeed, 0, 255, 0, 2400);
-  strcpy(buf, "");
-  ////sprintf(buf, "%d", FanRPM);
-  sprintf(buf, "%d", brightness);
-  sprintf(buf, buf);
 
-  // now send it back
-  server.send(200, "text/plain", buf); //Send web page
 
-}
+

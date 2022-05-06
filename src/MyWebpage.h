@@ -99,11 +99,11 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
       transition: all 200ms ease-in-out;
       background-color: #00AA00;
     }
-    .fanrpmslider {
-      width: 30%;
-      height: 55px;
+    .myslider {
+      width: 100%;
       outline: none;
-      height: 25px;
+      height: 55px;
+      
     }
     .bodytext {
       font-family: "Verdana", "Arial", sans-serif;
@@ -219,47 +219,58 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
     <header>
       <div class="navbar fixed-top">
           <div class="container">
-            <div class="navtitle">Sensor Monitor</div>
+            <div class="navtitle">Graduation Cap Controls</div>
             
           </div>
       </div>
     </header>
   
     <main class="container" style="margin-top:70px">
-      <div class="category">Sensor Readings</div>
-      <div style="border-radius: 10px !important;">
-      <table style="width:50%">
-      <colgroup>
-        <col span="1" style="background-color:rgb(230,230,230); width: 20%; color:#000000 ;">
-        <col span="1" style="background-color:rgb(200,200,200); width: 15%; color:#000000 ;">
-        <col span="1" style="background-color:rgb(180,180,180); width: 15%; color:#000000 ;">
-      </colgroup>
-      <col span="2"style="background-color:rgb(0,0,0); color:#FFFFFF">
-      <col span="2"style="background-color:rgb(0,0,0); color:#FFFFFF">
-      <col span="2"style="background-color:rgb(0,0,0); color:#FFFFFF">
-      <tr>
-        <th colspan="1"><div class="heading">Pin</div></th>
-        <th colspan="1"><div class="heading">Bits</div></th>
-        <th colspan="1"><div class="heading">Volts</div></th>
-      </tr>
-      <tr>
-        <td><div class="bodytext">Analog pin 34</div></td>
-        <td><div class="tabledata" id = "b0"></div></td>
-        <td><div class="tabledata" id = "v0"></div></td>
-      </tr>
-      <tr>
-        <td><div class="bodytext">Analog pin 35</div></td>
-        <td><div class="tabledata" id = "b1"></div></td>
-        <td><div class="tabledata" id = "v1"></div></td>
-      </tr>
-        <tr>
-        <td><div class="bodytext">Digital switch</div></td>
-        <td><div class="tabledata" id = "switch"></div></td>
-      </tr>
-      </table>
+      
     </div>
     <br>
-    <div class="category">Sensor Controls</div>
+    <div class="category">Brightness (<span id="brightness"></span>)</div>
+    <input type="range" class="myslider" min="0" max="255" value = "0" width = "0%" oninput="UpdateSliderBrightness(this.value)"/>
+    <br>
+    <br>
+    <br>
+    <div class="category">Static Image Hold Time (<span id="staticImageHoldTime"></span>)</div>
+    <input type="range" class="myslider" min="0" max="500" value = "0" width = "0%" oninput="UpdateSliderTime(this.value)"/>
+    <br>
+    <br>
+    <br>
+    <div class="category">Sequence Selection</div>
+    <br>
+    <input type="radio" id="seqSel0" name="sequenceSelection" value="0" onclick="seqSelect0()">
+  	<label for="seqSel0" class="bodytext">Custom Sequence (select below)</label><br><br>
+    
+    <input type="radio" id="seqSel1" name="sequenceSelection" value="1" onclick="seqSelect1()">
+  	<label for="seqSel1" class="bodytext">Sequence Save 1</label><br><br>
+    
+    <input type="radio" id="seqSel2" name="sequenceSelection" value="2" onclick="seqSelect2()">
+  	<label for="seqSel2" class="bodytext">Sequence Save 2</label><br><br>
+    
+    <input type="radio" id="seqSel3" name="sequenceSelection" value="3" onclick="seqSelect3()">
+  	<label for="seqSel3" class="bodytext">Sequence Save 3</label><br><br>
+    <br>
+    <br>
+    <br>
+    <div class="category">Custom Sequence Item Selection</div>
+    <br>
+    <input type="checkbox" id="itemSel0" name="itemSelection" value="0" onclick="itemSelect0()">
+  	<label for="itemSel0" class="bodytext">Static UCF Football</label><br><br>
+    
+    <input type="checkbox" id="itemSel1" name="itemSelection" value="1" onclick="itemSelect1()">
+  	<label for="itemSel1" class="bodytext">Static Pegasus</label><br><br>
+    
+    <input type="checkbox" id="itemSel2" name="itemSelection" value="2" onclick="itemSelect2()">
+  	<label for="itemSel2" class="bodytext">Static NASA</label><br><br>
+    
+    <input type="checkbox" id="itemSel3" name="itemSelection" value="3" onclick="itemSelect3()">
+  	<label for="itemSel3" class="bodytext">Scrolling "Hi Mom!"</label><br><br>
+    
+    <br>
+    <br>
     <br>
     <div class="bodytext">LED </div>
     <button type="button" class = "btn" id = "btn0" onclick="ButtonPress0()">Toggle</button>
@@ -270,14 +281,12 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
     </div>
     <br>
     <br>
-    <div class="bodytext">Fan Speed Control (RPM: <span id="fanrpm"></span>)</div>
-    <br>
-    <input type="range" class="fanrpmslider" min="0" max="255" value = "0" width = "0%" oninput="UpdateSlider(this.value)"/>
+    
     <br>
     <br>
   </main>
 
-  <footer div class="foot" id = "temp" >ESP32 Web Page Creation and Data Update Demo</div></footer>
+  <footer div class="foot" id = "temp" >Gavin Tryzbiak - University of Central Florida, Computer Science 2022</div></footer>
   
   </body>
 
@@ -297,6 +306,116 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
       }
       return xmlHttp;
     }
+
+
+
+
+
+
+	// function to handle button press from HTML code above
+    // and send a processing string back to server
+    // this processing string is use in the .on method
+    function seqSelect0() {
+      var xhttp = new XMLHttpRequest(); 
+      var message;
+      // if you want to handle an immediate reply (like status from the ESP
+      // handling of the button press use this code
+      // since this button status from the ESP is in the main XML code
+      // we don't need this
+      // remember that if you want immediate processing feedbac you must send it
+      // in the ESP handling function and here
+      /*
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          message = this.responseText;
+          // update some HTML data
+        }
+      }
+      */
+       
+      xhttp.open("PUT", "SEQ_SEL_0", false);
+      xhttp.send();
+    }
+    
+    // function to handle button press from HTML code above
+    // and send a processing string back to server
+    // this processing string is use in the .on method
+    function seqSelect1() {
+      var xhttp = new XMLHttpRequest(); 
+      var message;
+      // if you want to handle an immediate reply (like status from the ESP
+      // handling of the button press use this code
+      // since this button status from the ESP is in the main XML code
+      // we don't need this
+      // remember that if you want immediate processing feedbac you must send it
+      // in the ESP handling function and here
+      /*
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          message = this.responseText;
+          // update some HTML data
+        }
+      }
+      */
+       
+      xhttp.open("PUT", "SEQ_SEL_1", false);
+      xhttp.send();
+    }
+    
+    // function to handle button press from HTML code above
+    // and send a processing string back to server
+    // this processing string is use in the .on method
+    function seqSelect2() {
+      var xhttp = new XMLHttpRequest(); 
+      var message;
+      // if you want to handle an immediate reply (like status from the ESP
+      // handling of the button press use this code
+      // since this button status from the ESP is in the main XML code
+      // we don't need this
+      // remember that if you want immediate processing feedbac you must send it
+      // in the ESP handling function and here
+      /*
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          message = this.responseText;
+          // update some HTML data
+        }
+      }
+      */
+       
+      xhttp.open("PUT", "SEQ_SEL_2", false);
+      xhttp.send();
+    }
+    
+    // function to handle button press from HTML code above
+    // and send a processing string back to server
+    // this processing string is use in the .on method
+    function seqSelect3() {
+      var xhttp = new XMLHttpRequest(); 
+      var message;
+      // if you want to handle an immediate reply (like status from the ESP
+      // handling of the button press use this code
+      // since this button status from the ESP is in the main XML code
+      // we don't need this
+      // remember that if you want immediate processing feedbac you must send it
+      // in the ESP handling function and here
+      /*
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          message = this.responseText;
+          // update some HTML data
+        }
+      }
+      */
+       
+      xhttp.open("PUT", "SEQ_SEL_3", false);
+      xhttp.send();
+    }
+
+
+
+
+
 
     // function to handle button press from HTML code above
     // and send a processing string back to server
@@ -318,29 +437,18 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
         }
       }
       */
-       
+      
       xhttp.open("PUT", "BUTTON_0", false);
       xhttp.send();
     }
 
 
-    // function to handle button press from HTML code above
-    // and send a processing string back to server
-    // this processing string is use in the .on method
-    function ButtonPress1() {
-      var xhttp = new XMLHttpRequest(); 
-      /*
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("button1").innerHTML = this.responseText;
-        }
-      }
-      */
-      xhttp.open("PUT", "BUTTON_1", false);
-      xhttp.send(); 
-    }
+
+
+
+
     
-    function UpdateSlider(value) {
+    function UpdateSliderBrightness(value) {
       var xhttp = new XMLHttpRequest();
       // this time i want immediate feedback to the fan speed
       // yea yea yea i realize i'm computing fan speed but the point
@@ -348,7 +456,7 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
           // update the web based on reply from  ESP
-          document.getElementById("fanrpm").innerHTML=this.responseText;
+          document.getElementById("brightness").innerHTML=this.responseText;
         }
       }
       // this syntax is really weird the ? is a delimiter
@@ -357,15 +465,40 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
       // then the second arg VALUE is use in the processing function
       // String t_state = server.arg("VALUE");
       // then + the controls value property
-      xhttp.open("PUT", "UPDATE_SLIDER?VALUE="+value, true);
+      xhttp.open("PUT", "UPDATE_SLIDER_BRIGHTNESS?VALUE="+value, true);
       xhttp.send();
     }
+    
+    function UpdateSliderTime(value) {
+      var xhttp = new XMLHttpRequest();
+      // this time i want immediate feedback to the fan speed
+      // yea yea yea i realize i'm computing fan speed but the point
+      // is how to give immediate feedback
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          // update the web based on reply from  ESP
+          document.getElementById("staticImageHoldTime").innerHTML=this.responseText;
+        }
+      }
+      // this syntax is really weird the ? is a delimiter
+      // first arg UPDATE_SLIDER is use in the .on method
+      // server.on("/UPDATE_SLIDER", UpdateSlider);
+      // then the second arg VALUE is use in the processing function
+      // String t_state = server.arg("VALUE");
+      // then + the controls value property
+      xhttp.open("PUT", "UPDATE_SLIDER_TIME?VALUE="+value, true);
+      xhttp.send();
+    }
+    
+    
+    
+    
 
     // function to handle the response from the ESP
     function response(){
       var message;
       var barwidth;
-      var currentsensor;
+      //var currentsensor;
       var xmlResponse;
       var xmldoc;
       var dt = new Date();
@@ -375,56 +508,56 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
       xmlResponse=xmlHttp.responseXML;
   
       // get host date and time
-      document.getElementById("time").innerHTML = dt.toLocaleTimeString();
-      document.getElementById("date").innerHTML = dt.toLocaleDateString();
+//      document.getElementById("time").innerHTML = dt.toLocaleTimeString();
+//      document.getElementById("date").innerHTML = dt.toLocaleDateString();
   
       // A0
-      xmldoc = xmlResponse.getElementsByTagName("B0"); //bits for A0
-      message = xmldoc[0].firstChild.nodeValue;
+//      xmldoc = xmlResponse.getElementsByTagName("B0"); //bits for A0
+//      message = xmldoc[0].firstChild.nodeValue;
       
-      if (message > 2048){
-      color = "#aa0000";
-      }
-      else {
-        color = "#0000aa";
-      }
+//      if (message > 2048){
+//      color = "#aa0000";
+//      }
+//      else {
+//        color = "#0000aa";
+//      }
       
       barwidth = message / 40.95;
-      document.getElementById("b0").innerHTML=message;
-      document.getElementById("b0").style.width=(barwidth+"%");
+      //document.getElementById("b0").innerHTML=message;
+      //document.getElementById("b0").style.width=(barwidth+"%");
       // if you want to use global color set above in <style> section
       // other wise uncomment and let the value dictate the color
       //document.getElementById("b0").style.backgroundColor=color;
       //document.getElementById("b0").style.borderRadius="5px";
       
-      xmldoc = xmlResponse.getElementsByTagName("V0"); //volts for A0
-      message = xmldoc[0].firstChild.nodeValue;
-      document.getElementById("v0").innerHTML=message;
-      document.getElementById("v0").style.width=(barwidth+"%");
+//      xmldoc = xmlResponse.getElementsByTagName("V0"); //volts for A0
+//      message = xmldoc[0].firstChild.nodeValue;
+      //document.getElementById("v0").innerHTML=message;
+      //document.getElementById("v0").style.width=(barwidth+"%");
       // you can set color dynamically, maybe blue below a value, red above
-      document.getElementById("v0").style.backgroundColor=color;
+      //document.getElementById("v0").style.backgroundColor=color;
       //document.getElementById("v0").style.borderRadius="5px";
   
       // A1
-      xmldoc = xmlResponse.getElementsByTagName("B1");
-      message = xmldoc[0].firstChild.nodeValue;
-      if (message > 2048){
-      color = "#aa0000";
-      }
-      else {
-        color = "#0000aa";
-      }
-      document.getElementById("b1").innerHTML=message;
-      width = message / 40.95;
-      document.getElementById("b1").style.width=(width+"%");
-      document.getElementById("b1").style.backgroundColor=color;
+//      xmldoc = xmlResponse.getElementsByTagName("B1");
+//      message = xmldoc[0].firstChild.nodeValue;
+//      if (message > 2048){
+//      color = "#aa0000";
+//      }
+//      else {
+//        color = "#0000aa";
+//      }
+//      document.getElementById("b1").innerHTML=message;
+//      width = message / 40.95;
+//      document.getElementById("b1").style.width=(width+"%");
+ //     document.getElementById("b1").style.backgroundColor=color;
       //document.getElementById("b1").style.borderRadius="5px";
       
-      xmldoc = xmlResponse.getElementsByTagName("V1");
-      message = xmldoc[0].firstChild.nodeValue;
-      document.getElementById("v1").innerHTML=message;
-      document.getElementById("v1").style.width=(width+"%");
-      document.getElementById("v1").style.backgroundColor=color;
+//      xmldoc = xmlResponse.getElementsByTagName("V1");
+//      message = xmldoc[0].firstChild.nodeValue;
+//      document.getElementById("v1").innerHTML=message;
+//      document.getElementById("v1").style.width=(width+"%");
+//      document.getElementById("v1").style.backgroundColor=color;
       //document.getElementById("v1").style.borderRadius="5px";
   
       xmldoc = xmlResponse.getElementsByTagName("LED");
