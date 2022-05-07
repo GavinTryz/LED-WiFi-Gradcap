@@ -18,6 +18,7 @@
 #include "MyWebpage.h"
 ////#define AP_SSID "????????"
 ////#define AP_PASS "????????"
+#define TIMEOUT 200 // Slower pages may need a higher timeout. In ms
 
 // Matrix Definitions
 #define PIN  13
@@ -53,113 +54,81 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(MATRIX_WIDTH, MATRIX_HEIGHT, PIN,
 int brightness = 255;
 int staticTime = 30;
 int sequenceSelection = 0; // 0 = custom (randomized), 1 = save 1, etc.
-uint16_t customSequenceBitVector = 0xFFFF;
+uint16_t sequence0BitVector = 0xFFFF;
 uint16_t sequence1BitVector = 0xFFFF;
 uint16_t sequence2BitVector = 0xFFFF;
 uint16_t sequence3BitVector = 0xFFFF;
 
 
-// Function Prototypes
+// General Function Prototypes
 void printWiFiStatus();
+
+// Handler Prototypes
 void SendWebsite();
 void SendXML();
-
 void UpdateSliderBrightness();
 void UpdateSliderTime();
 void ProcessSeqSel0();
 void ProcessSeqSel1();
+void ProcessSeqSel2();
+void ProcessSeqSel3();
+void ProcessItemSel0();
+void ProcessItemSel1();
+void ProcessItemSel2();
+void ProcessItemSel3();
 
 
 void setup()
 {
   Serial.begin(115200);
 
-  // Wireless Setup
-  // if your web page or XML are large, you may not get a call back from the web page
-  // and the ESP will think something has locked up and reboot the ESP
-  // not sure I like this feature, actually I kinda hate it
   // disable watch dog timer 0
   disableCore0WDT();
-
   // maybe disable watch dog timer 1 if needed
-  //  disableCore1WDT();
+  // diableCore1WDT();
 
-  // Start server
   Serial.println("Starting server...");
   WiFi.softAP(AP_SSID, AP_PASS);
   delay(100);
   WiFi.softAPConfig(PageIP, gateway, subnet);
   delay(100);
   Actual_IP = WiFi.softAPIP();
-  Serial.print("IP address: "); Serial.println(Actual_IP);
+  Serial.print("AP running. Web address: "); Serial.println(Actual_IP);
 
   printWiFiStatus();
 
-  // these calls will handle data coming back from your web page
-  // this one is a page request, upon ESP getting / string the web page will be sent
-  server.on("/", SendWebsite);
 
-  // upon esp getting /XML string, ESP will build and send the XML, this is how we refresh
-  // just parts of the web page
-  server.on("/xml", SendXML);
-
-  // upon ESP getting /UPDATE_SLIDER string, ESP will execute the UpdateSlider function
-  // same notion for the following .on calls
-  // add as many as you need to process incoming strings from your web page
-  // as you can imagine you will need to code some javascript in your web page to send such strings
-  // this process will be documented in the SuperMon.h web page code
+  // Handle data coming from web page
+  server.on("/", SendWebsite); // Page request, send webpage
+  server.on("/xml", SendXML); // Build and send XML (data on interactables)
   server.on("/UPDATE_SLIDER_BRIGHTNESS", UpdateSliderBrightness);
   server.on("/UPDATE_SLIDER_TIME", UpdateSliderTime);
   server.on("/SEQ_SEL_0", ProcessSeqSel0);
   server.on("/SEQ_SEL_1", ProcessSeqSel1);
-  // server.on("/BUTTON_0", ProcessButton_0);
-  // server.on("/BUTTON_1", ProcessButton_1);
+  server.on("/SEQ_SEL_2", ProcessSeqSel2);
+  server.on("/SEQ_SEL_3", ProcessSeqSel3);
+  server.on("/ITEM_SEL_0", ProcessItemSel0);
+  server.on("/ITEM_SEL_1", ProcessItemSel1);
+  server.on("/ITEM_SEL_2", ProcessItemSel2);
+  server.on("/ITEM_SEL_3", ProcessItemSel3);
 
-  // finally begin the server
+  // Begin server
   server.begin();
-
-  // Matrix Setup
-  matrix.begin();
-  matrix.clear();
-  matrix.setTextWrap(false);
-  matrix.show();
 }
 
 void loop()
 {
-  // you main loop that measures, processes, runs code, etc.
-  // note that handling the "on" strings from the web page are NOT in the loop
-  // that processing is in individual functions all managed by the wifi lib
+  // TODO
 
-  // in my example here every 50 ms, i measure some analog sensor data (my finger dragging over the pins
-  // and process accordingly
-  // analog input can be from temperature sensors, light sensors, digital pin sensors, etc.
-  // if ((millis() - SensorUpdate) >= 50) {
-  //   //Serial.println("Reading Sensors");
-  //   SensorUpdate = millis();
-  //   BitsA0 = analogRead(PIN_A0);
-  //   BitsA1 = analogRead(PIN_A1);
-
-  //   // standard converion to go from 12 bit resolution reads to volts on an ESP
-  //   VoltsA0 = BitsA0 * 3.3 / 4096;
-  //   VoltsA1 = BitsA1 * 3.3 / 4096;
-
-  // }
-
-  // no matter what you must call this handleClient repeatidly--otherwise the web page
-  // will not get instructions to do something
+  // Must be called repeatedly! Webpage needs instructions
   server.handleClient();
-  Serial.print("Sequence selection: "); Serial.println(sequenceSelection);
 }
 
 
-
-
-// Custom functions
-
+// Helper Functions
 void printWiFiStatus()
 {
-  // print the SSID of the network you're attached to:
+  // Print the SSID of the network you're attached to:
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());
 
@@ -177,6 +146,132 @@ void printWiFiStatus()
   Serial.print("Open http://");
   Serial.println(ip);
 }
+
+// Webpage handlers
+void SendWebsite()
+{
+  // May have to change first agument value. Large pages may need more time,
+  // 200ms may not be enough for a timeout.
+  server.send(TIMEOUT, "text/html", PAGE_MAIN);
+}
+
+void SendXML()
+{
+  strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
+
+  // Update Statuses
+  // Sequence Selection
+  strcat(XML, "<SEQ_SEL_0_STATUS>"); strcat(XML, (sequenceSelection == 0 ? "1" : "0")); strcat(XML, "</SEQ_SEL_0_STATUS>\n");
+  strcat(XML, "<SEQ_SEL_1_STATUS>"); strcat(XML, (sequenceSelection == 1 ? "1" : "0")); strcat(XML, "</SEQ_SEL_1_STATUS>\n");
+  strcat(XML, "<SEQ_SEL_2_STATUS>"); strcat(XML, (sequenceSelection == 2 ? "1" : "0")); strcat(XML, "</SEQ_SEL_2_STATUS>\n");
+  strcat(XML, "<SEQ_SEL_3_STATUS>"); strcat(XML, (sequenceSelection == 3 ? "1" : "0")); strcat(XML, "</SEQ_SEL_3_STATUS>\n");
+
+  // Item Selection
+  strcat(XML, "<ITEM_SEL_0_STATUS>"); strcat(XML, (((sequence0BitVector >> 0) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_0_STATUS>\n"); // bitVector >> n & 1 checks if the nth bit is 1
+  strcat(XML, "<ITEM_SEL_1_STATUS>"); strcat(XML, (((sequence0BitVector >> 1) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_1_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_2_STATUS>"); strcat(XML, (((sequence0BitVector >> 2) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_2_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_3_STATUS>"); strcat(XML, (((sequence0BitVector >> 3) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_3_STATUS>\n");
+
+  strcat(XML, "</Data>\n");
+
+  //Serial.println("Sending XML...");
+  //Serial.println(XML);
+
+  // Larger pages may need processing time and a larger timeout
+  server.send(TIMEOUT, "text/xml", XML);
+}
+
+void UpdateSliderBrightness()
+{
+  String t_state = server.arg("VALUE");
+  brightness = t_state.toInt();
+
+  if (brightness > 225) // Was probably trying to drag it to 255
+    brightness = 255;
+
+  Serial.print("Updated Brightness Slider to "); Serial.println(brightness);
+  strcpy(buf, "");
+  sprintf(buf, "%d", brightness);
+  sprintf(buf, buf);
+
+  server.send(TIMEOUT, "text/plain", buf);
+}
+
+void UpdateSliderTime()
+{
+  String t_state = server.arg("VALUE");
+  staticTime = t_state.toInt();
+
+  if (staticTime > 450) // Anything less than 450 seconds should become ~infinity
+    staticTime = 65535;
+
+  Serial.print("Updated Static Time Slider to "); Serial.println(staticTime);
+  strcpy(buf, "");
+  if (staticTime == 65535)
+    sprintf(buf, "∞");
+  else
+    sprintf(buf, "%d", staticTime);
+  sprintf(buf, buf);
+
+  server.send(TIMEOUT, "text/plain", buf);
+}
+
+void ProcessSeqSel0()
+{
+  Serial.println("Sequence selection 0 pressed!");
+  sequenceSelection = 0;
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessSeqSel1()
+{
+  Serial.println("Sequence selection 1 pressed!");
+  sequenceSelection = 1;
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessSeqSel2()
+{
+  Serial.println("Sequence selection 2 pressed!");
+  sequenceSelection = 2;
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessSeqSel3()
+{
+  Serial.println("Sequence selection 3 pressed!");
+  sequenceSelection = 3;
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel0()
+{
+  Serial.println("Item selection 0 pressed!");
+  sequence0BitVector ^= 1UL << 0; // ^= 1UL << n flips the nth bit
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel1()
+{
+  Serial.println("Item selection 1 pressed!");
+  sequence0BitVector ^= 1UL << 1; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel2()
+{
+  Serial.println("Item selection 2 pressed!");
+  sequence0BitVector ^= 1UL << 2; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel3()
+{
+  Serial.println("Item selection 3 pressed!");
+  sequence0BitVector ^= 1UL << 3; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
 
 
 
