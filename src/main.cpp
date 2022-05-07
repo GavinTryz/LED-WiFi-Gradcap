@@ -21,17 +21,10 @@
 #define TIMEOUT 200 // Slower pages may need a higher timeout. In ms
 
 // Matrix Definitions
+#include "PixelArtByteArrays.h"
 #define PIN  13
-#define MATRIX_WIDTH 8
-#define MATRIX_HEIGHT 8
-#define BLACK    0x0000
-#define BLUE     0x001F
-#define RED      0xF800
-#define GREEN    0x07E0
-#define CYAN     0x07FF
-#define MAGENTA  0xF81F
-#define YELLOW   0xFFE0 
-#define WHITE    0xFFFF
+#define MATRIX_WIDTH 14
+#define MATRIX_HEIGHT 14
 
 
 // Wireless Variables
@@ -52,16 +45,19 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(MATRIX_WIDTH, MATRIX_HEIGHT, PIN,
 
 // General Variables
 int brightness = 255;
-int staticTime = 30;
-int sequenceSelection = 0; // 0 = custom (randomized), 1 = save 1, etc.
-uint16_t sequence0BitVector = 0xFFFF;
-uint16_t sequence1BitVector = 0xFFFF;
-uint16_t sequence2BitVector = 0xFFFF;
-uint16_t sequence3BitVector = 0xFFFF;
+int staticTime = 5;
+int sequenceSelection = 0; // 0 = custom (0), 1 = save 1, etc.
+uint16_t sequence0BitVector = 0b0000111111111111;
+uint16_t sequence1BitVector = 0b0000000000010111;
+uint16_t sequence2BitVector = 0b0000111111100000;
+uint16_t sequence3BitVector = 0b0000000000000001;
 
 
 // General Function Prototypes
 void printWiFiStatus();
+uint16_t updateBitVector();
+void staticImage(const uint16_t image[]);
+void drawImage(const uint16_t image[]);
 
 // Handler Prototypes
 void SendWebsite();
@@ -76,11 +72,40 @@ void ProcessItemSel0();
 void ProcessItemSel1();
 void ProcessItemSel2();
 void ProcessItemSel3();
+void ProcessItemSel4();
+void ProcessItemSel5();
+void ProcessItemSel6();
+void ProcessItemSel7();
+void ProcessItemSel8();
+void ProcessItemSel9();
+void ProcessItemSel10();
+void ProcessItemSel11();
 
+// Animations
+void animation0();
+void animation1();
+void animation2();
+void animation3();
+void animation4();
+void animation5();
+void animation6();
+void animation7();
+void animation8();
+void animation9();
+void animation10();
+void animation11();
+
+// Second Core stuff
+TaskHandle_t matrixTask;
+void secondCoreTask(void * pvParameters);
 
 void setup()
 {
   Serial.begin(115200);
+
+  // Rather than try to do complex time management, I'm just gonna assign everything
+  // LED matrix related to the second core.
+  xTaskCreatePinnedToCore(secondCoreTask, "Matrix Management", 10000, NULL, 1, &matrixTask, 1);
 
   // disable watch dog timer 0
   disableCore0WDT();
@@ -111,6 +136,14 @@ void setup()
   server.on("/ITEM_SEL_1", ProcessItemSel1);
   server.on("/ITEM_SEL_2", ProcessItemSel2);
   server.on("/ITEM_SEL_3", ProcessItemSel3);
+  server.on("/ITEM_SEL_4", ProcessItemSel4);
+  server.on("/ITEM_SEL_5", ProcessItemSel5);
+  server.on("/ITEM_SEL_6", ProcessItemSel6);
+  server.on("/ITEM_SEL_7", ProcessItemSel7);
+  server.on("/ITEM_SEL_8", ProcessItemSel8);
+  server.on("/ITEM_SEL_9", ProcessItemSel9);
+  server.on("/ITEM_SEL_10", ProcessItemSel10);
+  server.on("/ITEM_SEL_11", ProcessItemSel11);
 
   // Begin server
   server.begin();
@@ -118,14 +151,285 @@ void setup()
 
 void loop()
 {
-  // TODO
+  // Everything matrix related is in secondCoreTask()
 
   // Must be called repeatedly! Webpage needs instructions
   server.handleClient();
 }
 
+void secondCoreTask(void * pvParameters)
+{
+  // Matrix startup
+  matrix.begin();
+  matrix.clear();
+  matrix.setTextWrap(false);
+  matrix.setTextColor(RED);
+  matrix.setBrightness(brightness);
+  matrix.show();
 
-// Helper Functions
+  // Startup flashing
+  for (int i = 0; i < 20; i++)
+  {
+    matrix.drawPixel(0, 0, GREEN); matrix.show();
+    delay(250);
+    matrix.drawPixel(0, 0, BLACK); matrix.show();
+    delay(250);
+  }
+
+  uint16_t currentBitVector;
+  // Cycle through items (animations/images)
+  // This is REALLY garbage code, I'm so sorry, but It's 3am and I graduate tomorrow. Some of the earlier code is better
+  while(true)
+  {
+    currentBitVector = updateBitVector();
+    // Attempt to play items
+    if (((currentBitVector >> 0) & 1) == 1) // ((currentBitVector >> n) & 1) == 1 checks if nth bit is 1
+      animation0();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 1) & 1) == 1)
+      animation1();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 2) & 1) == 1)
+      animation2();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 3) & 1) == 1)
+      animation3();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 4) & 1) == 1)
+      animation4();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 5) & 1) == 1)
+      animation5();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 6) & 1) == 1)
+      animation6();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 7) & 1) == 1)
+      animation7();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 8) & 1) == 1)
+      animation8();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 9) & 1) == 1)
+      animation9();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 10) & 1) == 1)
+      animation10();
+
+    currentBitVector = updateBitVector();
+    if (((currentBitVector >> 11) & 1) == 1)
+      animation11();
+  }
+}
+
+// Animation Functions
+void animation0()
+{
+  staticImage(UCF_img);
+}
+
+void animation1()
+{
+  staticImage(pegasus_img);
+}
+
+void animation2()
+{
+  staticImage(NASA_img);
+}
+
+void animation3()
+{
+  staticImage(creeper_img);
+}
+
+void animation4()
+{
+  staticImage(github_img);
+}
+
+void animation5()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 25*7; i++) // the string is 25 chars
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("UCF Computer Science 2022"));
+    if( --x < -160 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation6()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 10*7; i++)
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("Hi Mom!!!"));
+    if( --x < -58 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation7()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 50*7; i++) 
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("Graduating with a B.S. (Bachelor's of StackOverflow)"));
+    if( --x < -339 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation8()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 28*7; i++) 
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("sudo apt-get install diploma"));
+    if( --x < -180 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation9()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 22*7; i++) 
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("I still can't exit vim"));
+    if( --x < -140 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation10()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 32*7; i++) 
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("Robert'); DROP TABLE Students;--"));
+    if( --x < -208 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(40);
+  }
+  delay(2000);
+}
+
+void animation11()
+{
+  int x = matrix.width();
+  matrix.setTextColor(textColors[random(7)]);
+  for (int i = 0; i < 38*7; i++) 
+  {
+    matrix.fillScreen(0);    //Turn off all the LEDs
+    matrix.setCursor(x, 3);
+    matrix.print(F("Looking for work! LinkedIn: GavinTryz"));
+    if( --x < -268 )
+    {
+      x = matrix.width();
+    }
+    matrix.show();
+    delay(45);
+  }
+  delay(2000);
+}
+
+// Matrix Helper Functions
+void drawImage(const uint16_t image[])
+{
+  matrix.clear();
+  for (int i = 0; i < MATRIX_WIDTH*MATRIX_HEIGHT; i++)
+  {
+    matrix.drawPixel(i%MATRIX_HEIGHT, i/MATRIX_HEIGHT, image[i]);
+  }
+  matrix.show();
+}
+
+void staticImage(const uint16_t image[])
+{
+  drawImage(image);
+  if (staticTime != 35565)
+    delay(staticTime*1000);
+  else
+    while(staticTime == 35565){}
+}
+
+uint16_t updateBitVector()
+{
+  switch (sequenceSelection)
+  {
+  case 0:
+    return sequence0BitVector;
+  case 1:
+    return sequence1BitVector;
+  case 2:
+    return sequence2BitVector;
+  case 3:
+    return sequence3BitVector;
+  default:
+    return 0;
+  }
+  delay(10);
+}
+
+// Wireless Helper Functions
 void printWiFiStatus()
 {
   // Print the SSID of the network you're attached to:
@@ -171,6 +475,14 @@ void SendXML()
   strcat(XML, "<ITEM_SEL_1_STATUS>"); strcat(XML, (((sequence0BitVector >> 1) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_1_STATUS>\n");
   strcat(XML, "<ITEM_SEL_2_STATUS>"); strcat(XML, (((sequence0BitVector >> 2) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_2_STATUS>\n");
   strcat(XML, "<ITEM_SEL_3_STATUS>"); strcat(XML, (((sequence0BitVector >> 3) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_3_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_4_STATUS>"); strcat(XML, (((sequence0BitVector >> 4) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_4_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_5_STATUS>"); strcat(XML, (((sequence0BitVector >> 5) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_5_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_6_STATUS>"); strcat(XML, (((sequence0BitVector >> 6) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_6_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_7_STATUS>"); strcat(XML, (((sequence0BitVector >> 7) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_7_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_8_STATUS>"); strcat(XML, (((sequence0BitVector >> 8) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_8_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_9_STATUS>"); strcat(XML, (((sequence0BitVector >> 9) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_9_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_10_STATUS>"); strcat(XML, (((sequence0BitVector >> 10) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_10_STATUS>\n");
+  strcat(XML, "<ITEM_SEL_11_STATUS>"); strcat(XML, (((sequence0BitVector >> 11) & 1) == 1 ? "1" : "0")); strcat(XML, "</ITEM_SEL_11_STATUS>\n");
 
   strcat(XML, "</Data>\n");
 
@@ -188,6 +500,9 @@ void UpdateSliderBrightness()
 
   if (brightness > 225) // Was probably trying to drag it to 255
     brightness = 255;
+
+  matrix.setBrightness(brightness);
+  matrix.show();
 
   Serial.print("Updated Brightness Slider to "); Serial.println(brightness);
   strcpy(buf, "");
@@ -269,6 +584,62 @@ void ProcessItemSel3()
 {
   Serial.println("Item selection 3 pressed!");
   sequence0BitVector ^= 1UL << 3; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel4()
+{
+  Serial.println("Item selection 4 pressed!");
+  sequence0BitVector ^= 1UL << 4; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel5()
+{
+  Serial.println("Item selection 5 pressed!");
+  sequence0BitVector ^= 1UL << 5; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel6()
+{
+  Serial.println("Item selection 6 pressed!");
+  sequence0BitVector ^= 1UL << 6; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel7()
+{
+  Serial.println("Item selection 7 pressed!");
+  sequence0BitVector ^= 1UL << 7; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel8()
+{
+  Serial.println("Item selection 8 pressed!");
+  sequence0BitVector ^= 1UL << 8; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel9()
+{
+  Serial.println("Item selection 9 pressed!");
+  sequence0BitVector ^= 1UL << 9; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel10()
+{
+  Serial.println("Item selection 10 pressed!");
+  sequence0BitVector ^= 1UL << 10; 
+  server.send(TIMEOUT, "text/plain", "");
+}
+
+void ProcessItemSel11()
+{
+  Serial.println("Item selection 11 pressed!");
+  sequence0BitVector ^= 1UL << 11; 
   server.send(TIMEOUT, "text/plain", "");
 }
 

@@ -235,8 +235,8 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
             <br>
 
             <!-- Static Image Hold Time -->
-            <div class="category">Static Image Hold Time (<span id="staticImageHoldTime">30</span>)</div>
-            <input type="range" class="myslider" min="0" max="500" value = "30" width = "0%" oninput="UpdateSliderTime(this.value)"/>
+            <div class="category">Static Image Hold Time (<span id="staticImageHoldTime">5</span>)</div>
+            <input type="range" class="myslider" min="0" max="300" value = "5" width = "0%" oninput="UpdateSliderTime(this.value)"/>
             <br>
             <br>
             <br>
@@ -249,13 +249,13 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
             <div class="bodytext" id="seqSel0Text">Custom Sequence (select below)</div><br>
 
             <button type="button" class = "btn" id = "seqSel1Btn" onclick="seqSel1Press()">Select</button>
-            <div class="bodytext" id="seqSel1Text">Sequence Save 1</div><br>
+            <div class="bodytext" id="seqSel1Text">Professional Static</div><br>
 
             <button type="button" class = "btn" id = "seqSel2Btn" onclick="seqSel2Press()">Select</button>
-            <div class="bodytext" id="seqSel2Text">Sequence Save 2</div><br>
+            <div class="bodytext" id="seqSel2Text">Scrolling Text</div><br>
 
             <button type="button" class = "btn" id = "seqSel3Btn" onclick="seqSel3Press()">Select</button>
-            <div class="bodytext" id="seqSel3Text">Sequence Save 3</div>
+            <div class="bodytext" id="seqSel3Text">UCF Logo</div>
             <br>
             <br>
 
@@ -273,7 +273,31 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
             <div class="bodytext" id="itemSel2Text">Static NASA</div><br>
 
             <button type="button" class = "btn" id = "itemSel3Btn" onclick="itemSel3Press()">Toggle</button>
-            <div class="bodytext" id="itemSel3Text">Text "Hi Mom!"</div><br>
+            <div class="bodytext" id="itemSel3Text">Static Creeper</div><br>
+
+            <button type="button" class = "btn" id = "itemSel4Btn" onclick="itemSel4Press()">Toggle</button>
+            <div class="bodytext" id="itemSel4Text">Static GitHub</div><br>
+
+            <button type="button" class = "btn" id = "itemSel5Btn" onclick="itemSel5Press()">Toggle</button>
+            <div class="bodytext" id="itemSel5Text">Text "CS 2022"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel6Btn" onclick="itemSel6Press()">Toggle</button>
+            <div class="bodytext" id="itemSel6Text">Text "Hi Mom!"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel7Btn" onclick="itemSel7Press()">Toggle</button>
+            <div class="bodytext" id="itemSel7Text">Text "Bachelor's of StackOverflow"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel8Btn" onclick="itemSel8Press()">Toggle</button>
+            <div class="bodytext" id="itemSel8Text">Text "sudo apt-get"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel9Btn" onclick="itemSel9Press()">Toggle</button>
+            <div class="bodytext" id="itemSel9Text">Text "vim"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel10Btn" onclick="itemSel10Press()">Toggle</button>
+            <div class="bodytext" id="itemSel10Text">Text "little bobby drop tables"</div><br>
+
+            <button type="button" class = "btn" id = "itemSel11Btn" onclick="itemSel11Press()">Toggle</button>
+            <div class="bodytext" id="itemSel11Text">Text "Linked In"</div><br>
         </main>
 
         <br>
@@ -357,6 +381,62 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
         {
             var xhttp = new XMLHttpRequest();
             xhttp.open("PUT", "ITEM_SEL_3", false);
+            xhttp.send(); 
+        }
+
+        function itemSel4Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_4", false);
+            xhttp.send(); 
+        }
+
+        function itemSel5Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_5", false);
+            xhttp.send(); 
+        }
+
+        function itemSel6Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_6", false);
+            xhttp.send(); 
+        }
+
+        function itemSel7Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_7", false);
+            xhttp.send(); 
+        }
+
+        function itemSel8Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_8", false);
+            xhttp.send(); 
+        }
+
+        function itemSel9Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_9", false);
+            xhttp.send(); 
+        }
+
+        function itemSel10Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_10", false);
+            xhttp.send(); 
+        }
+
+        function itemSel11Press()
+        {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("PUT", "ITEM_SEL_11", false);
             xhttp.send(); 
         }
 
@@ -458,6 +538,38 @@ const char PAGE_MAIN[] PROGMEM = R"=====(
             xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_3_STATUS"); // This will require code in main.cpp!
             message = xmldoc[0].firstChild.nodeValue;
             document.getElementById("itemSel3Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_4_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel4Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_5_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel5Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_6_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel6Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_7_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel7Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_8_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel8Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_9_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel9Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_10_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel10Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
+
+            xmldoc = xmlResponse.getElementsByTagName("ITEM_SEL_11_STATUS"); // This will require code in main.cpp!
+            message = xmldoc[0].firstChild.nodeValue;
+            document.getElementById("itemSel11Text").style.color = (message == 0 ? "#8f0000" : "#008f0a"); // Set color to red if 0, otherwise green
         }
 
 
