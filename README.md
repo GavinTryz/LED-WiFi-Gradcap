@@ -6,13 +6,16 @@ In May 2022, I graduated from the University of Central Florida, and decided to 
 Please note that my code started off nice and organized... it did not finish that way. I started writing the code for this less than 32 hours before walking.
 
 Video of the animations:
+
 [![Link to YouTube video of RGB Matrix](https://img.youtube.com/vi/TQ12iKv7iug/0.jpg)](https://www.youtube.com/watch?v=TQ12iKv7iug)
 
 Screenshot of the webpage that the webserver on the ESP32 hosts to control the matrix:
-![Screenshot of user controls](https://pasteimg.com/images/2022/06/12/IMG_1258.jpg)
 
-It made it quite easy for my family to spot me at graduation
-![enter image description here](https://pasteimg.com/images/2022/06/12/IMG_20220507_184129__01.jpg)
+<img src="https://pasteimg.com/images/2022/06/12/IMG_1258.jpg" width="300">
+
+It made it quite easy for my family to spot me at graduation. Note that the images were much clearer to the naked eye than my parents cell phone.
+
+<img src="https://pasteimg.com/images/2022/06/12/IMG_20220507_184129__01.jpg" width="600">
 
 Required components:
 - ESP32 Dev board
